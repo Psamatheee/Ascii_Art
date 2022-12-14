@@ -1,5 +1,6 @@
 package com.example.ascii_art;
 
+import javafx.animation.*;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -8,6 +9,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Labeled;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -19,12 +21,40 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
 
 
 public class HelloApplication extends Application {
+    public class TextSizeTransition extends Transition {
+
+        private Text text; // a little generic -> subclasses: ButtonBase, Cell, Label, TitledPane
+        private int start, end; // initial and final size of the text
+
+        public TextSizeTransition(Text text, int start, int end, Duration duration) {
+            this.text = text;
+            this.start = start;
+            this.end = start - end; // minus start because of (end * frac) + start in interpolate()
+            setCycleDuration(duration);
+            setInterpolator(Interpolator.LINEAR);
+            setCycleCount(1);
+        }
+
+
+        @Override
+        protected void interpolate(double v) {
+            int size = (int) (start - (end * v));
+            if(size>= start - end) {
+                text.setFont(Font.font("Monospaced", size));
+            }
+            if(size < start - end){
+
+                text.setFont(Font.font("Monospaced", start - end));
+            }
+        }
+    }
     @Override
     public void start(Stage stage) throws IOException {
         double width = Screen.getPrimary().getBounds().getWidth();
@@ -32,10 +62,11 @@ public class HelloApplication extends Application {
         VBox root = new VBox();
         root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
         //elements
-        Text text = new Text("ASCII Art Generator");
+        Text text = new Text("ASCII ART GENERATOR");
         text.setFont(Font.font("Monospaced", 80));
         text.setFill(Color.WHITE);
-        Button uploadButton = new Button("Upload Image");
+        Button uploadButton = new Button("UPLOAD IMAGE");
+        uploadButton.setStyle("-fx-background-color: white; -fx-font: 20px \"Monospaced\";");
         root.getChildren().addAll(text,uploadButton);
         root.setAlignment(Pos.CENTER);
         root.setSpacing(40);
@@ -60,16 +91,19 @@ public class HelloApplication extends Application {
                     window.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
 
                     Text text1 = new Text(ascii);
+
+
                     text1.setTextAlignment(TextAlignment.CENTER);
-                    text1.setFont(Font.font("Monospaced", 3));
+                    text1.setFont(Font.font("Monospaced", 10));
                     text1.setFill(Color.WHITE);
 
                     window.getChildren().add(text1);
                     window.setAlignment(Pos.CENTER);
-                    
+                    TextSizeTransition trans = new TextSizeTransition(text1, 40, 3,Duration.millis(5000));
                     stage.getScene().setRoot(window);
                     stage.getScene().setFill(Color.BLACK);
                     stage.show();
+                    trans.play();
                 }
             }
         });
